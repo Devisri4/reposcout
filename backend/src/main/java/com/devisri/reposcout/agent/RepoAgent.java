@@ -9,6 +9,8 @@ import com.devisri.reposcout.tools.RepoTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.ai.retry.TransientAiException;
 import org.springframework.stereotype.Service;
@@ -33,14 +35,14 @@ public class RepoAgent {
             How to work:
             1. Start with listFiles("") or searchCode with key words from the question.
             2. Open the most relevant files and follow the code (calls, imports) until you understand it.
-            3. Read focused ranges of about 100 lines. You have at most {maxCalls} tool calls, so plan them.
+            3. Read focused ranges of about 60 lines. Most questions need 4-8 tool calls; the hard limit is {maxCalls}.
             4. Never guess about code you have not read.
 
             How to answer:
             - Explain clearly in Markdown, using short paragraphs or bullet points, in under 300 words.
             - Back every claim about the code with a citation in exactly this form: [path/to/File.java:12-30]
               (path from the repository root, then the line range). Example: [src/auth/LoginService.java:4-6]
-            - Only cite lines you actually read with readFile.
+            - Only cite lines you actually read with readFile. Do not write line numbers anywhere except inside citations.
             - If the repository does not answer the question, say so honestly.
             """;
 
@@ -70,7 +72,7 @@ public class RepoAgent {
 
         long started = System.currentTimeMillis();
         try {
-            String answer = chat.prompt()
+            ChatResponse response = chat.prompt()
                     .system(s -> s.text(SYSTEM_PROMPT)
                             .param("repo", repo.fullName())
                             .param("branch", repo.branch())
@@ -78,9 +80,13 @@ public class RepoAgent {
                     .user(question)
                     .tools(tools)
                     .call()
-                    .content();
-            log.info("Answered question on {} with {} tool calls in {} ms",
-                    repo.fullName(), tools.callCount(), System.currentTimeMillis() - started);
+                    .chatResponse();
+            String answer = response == null || response.getResult() == null
+                    ? null : response.getResult().getOutput().getText();
+            Usage usage = response == null ? null : response.getMetadata().getUsage();
+            log.info("Answered question on {} with {} tool calls in {} ms, tokens: {}",
+                    repo.fullName(), tools.callCount(), System.currentTimeMillis() - started,
+                    usage == null ? "?" : usage.getPromptTokens() + " in / " + usage.getCompletionTokens() + " out");
             if (answer == null || answer.isBlank()) {
                 throw new AgentException("The AI returned an empty answer. Please try again.", true, null);
             }

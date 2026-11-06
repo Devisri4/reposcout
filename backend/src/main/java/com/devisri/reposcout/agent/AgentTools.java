@@ -48,7 +48,7 @@ public class AgentTools {
     }
 
     @Tool(description = "Read a range of lines from a text file. Returns numbered lines. "
-            + "At most " + RepoTools.MAX_LINES_PER_READ + " lines per call; prefer about 100.")
+            + "At most " + RepoTools.MAX_LINES_PER_READ + " lines per call; prefer about 60.")
     public String readFile(
             @ToolParam(description = "File path from the repository root, e.g. \"src/App.java\"") String path,
             @ToolParam(description = "First line to read, starting at 1") int startLine,

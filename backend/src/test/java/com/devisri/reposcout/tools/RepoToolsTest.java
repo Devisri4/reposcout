@@ -87,17 +87,17 @@ class RepoToolsTest {
     }
 
     @Test
-    void readsAtMost200LinesAndSaysWhereToContinue() {
+    void readsAtMost120LinesAndSaysWhereToContinue() {
         String out = tools.readFile("src/Big.java", 1, 1000);
 
-        assertThat(out).contains("(lines 1-200 of 450)").contains("200: line 200")
-                .doesNotContain("201: line 201").contains("startLine=201");
+        assertThat(out).contains("(lines 1-120 of 450)").contains("120: line 120")
+                .doesNotContain("121: line 121").contains("startLine=121");
     }
 
     @Test
     void clampsTheEndAndDefaultsAMissingEnd() {
         assertThat(tools.readFile("src/Big.java", 440, 999)).contains("(lines 440-450 of 450)");
-        assertThat(tools.readFile("src/Big.java", 10, 0)).contains("(lines 10-209 of 450)");
+        assertThat(tools.readFile("src/Big.java", 10, 0)).contains("(lines 10-129 of 450)");
     }
 
     @Test

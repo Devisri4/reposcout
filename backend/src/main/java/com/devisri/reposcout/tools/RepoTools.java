@@ -27,10 +27,10 @@ import com.devisri.reposcout.repo.LoadedRepo;
  */
 public class RepoTools {
 
-    public static final int MAX_LIST_ENTRIES = 200;
-    public static final int MAX_LINES_PER_READ = 200;
-    public static final int MAX_SEARCH_MATCHES = 40;
-    static final int MAX_LINE_LENGTH = 300;
+    public static final int MAX_LIST_ENTRIES = 100;
+    public static final int MAX_LINES_PER_READ = 120;
+    public static final int MAX_SEARCH_MATCHES = 25;
+    static final int MAX_LINE_LENGTH = 200;
 
     private static final Set<String> SKIPPED_FOLDERS = Set.of(".git", "node_modules");
 

@@ -32,6 +32,7 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 | Download the repo zip once and search it on the server | GitHub code search allows ~10 searches/minute. One zip download, then unlimited fast local search. |
 | No database in Phase 1 | Not needed yet. Postgres arrives in Phase 2. |
 | Max ~15 tool calls per question | Stays inside Groq's free limits and stops runaway loops. |
+| Model `openai/gpt-oss-120b` on Groq, low reasoning effort, retry on 429 | Free tier is 8000 tokens/minute for every model; small reads + patient retries keep a question at ~20-60 s. |
 | Read files in small line ranges | Large files would burn the free token budget. |
 | Citation check in plain Java after the answer | The AI's file references are verified, not trusted. |
 | Public repos only, with a size limit | Safe, simple, no login needed. |
@@ -44,9 +45,9 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 | 1 | Repo, Spring Boot skeleton, CI (React skeleton moved to step 6) | Build + health test pass | Done |
 | 2 | Repo loader: download zip, unpack safely, size limit | Unit tests pass | Done |
 | 3 | Tools: listFiles, readFile, searchCode (no AI) | Unit tests pass | Done |
-| 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | Code + tests done; live Groq check pending |
-| 5 | Citation checker + step log | Answers show verified files | Code + tests done; live check pending |
-| 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | |
+| 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | Done |
+| 5 | Citation checker + step log | Answers show verified files | Done |
+| 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | Next |
 | 7 | Deploy (Render + Vercel), README, screenshots | Live demo link | |
 
 Phase 1 is done when any public repo can be pasted, a question asked, and a correct answer with verified
