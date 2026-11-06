@@ -1,0 +1,35 @@
+package com.devisri.reposcout.citations;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/** Which line ranges of which files the agent has really read during one question. */
+public class ReadRanges {
+
+    private final Map<String, List<int[]>> byFile = new HashMap<>();
+
+    public synchronized void add(String path, int from, int to) {
+        byFile.computeIfAbsent(path, p -> new ArrayList<>()).add(new int[]{from, to});
+    }
+
+    /** True if every line from {@code from} to {@code to} was covered by some read. */
+    public synchronized boolean covers(String path, int from, int to) {
+        List<int[]> ranges = byFile.get(path);
+        if (ranges == null) {
+            return false;
+        }
+        for (int line = from; line <= to; line++) {
+            final int l = line;
+            if (ranges.stream().noneMatch(r -> r[0] <= l && l <= r[1])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public synchronized boolean readAny(String path) {
+        return byFile.containsKey(path);
+    }
+}

@@ -1,6 +1,10 @@
 package com.devisri.reposcout.api;
 
+import java.util.List;
+
+import com.devisri.reposcout.agent.AgentStep;
 import com.devisri.reposcout.agent.RepoAgent;
+import com.devisri.reposcout.citations.CitationChecker;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -18,7 +22,8 @@ public class AskController {
             @NotBlank(message = "question is required") @Size(max = 500, message = "question must be under 500 characters") String question) {
     }
 
-    public record AskResponse(String repo, String branch, String answer, int toolCalls) {
+    public record AskResponse(String repo, String branch, String answer, List<CitationChecker.Citation> citations,
+                              List<AgentStep> steps, int toolCalls) {
     }
 
     private final RepoAgent agent;
@@ -30,6 +35,7 @@ public class AskController {
     @PostMapping("/ask")
     public AskResponse ask(@Valid @RequestBody AskRequest request) {
         RepoAgent.Result result = agent.ask(request.repoUrl(), request.question().strip());
-        return new AskResponse(result.repo().fullName(), result.repo().branch(), result.answer(), result.toolCalls());
+        return new AskResponse(result.repo().fullName(), result.repo().branch(), result.answer(),
+                result.citations(), result.steps(), result.toolCalls());
     }
 }

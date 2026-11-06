@@ -1,8 +1,11 @@
 package com.devisri.reposcout.api;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import com.devisri.reposcout.agent.AgentException;
+import com.devisri.reposcout.agent.AgentStep;
+import com.devisri.reposcout.citations.CitationChecker;
 import com.devisri.reposcout.agent.RepoAgent;
 import com.devisri.reposcout.repo.LoadedRepo;
 import com.devisri.reposcout.repo.RepoLoadException;
@@ -37,12 +40,16 @@ class AskControllerTest {
     void returnsTheAgentsAnswer() throws Exception {
         LoadedRepo repo = new LoadedRepo("acme", "demo", "main", Path.of("unused"));
         when(agent.ask("https://github.com/acme/demo", "How does login work?"))
-                .thenReturn(new RepoAgent.Result(repo, "Login is in [src/Login.java:1-5]", 4));
+                .thenReturn(new RepoAgent.Result(repo, "Login is in [src/Login.java:1-5]",
+                        List.of(new CitationChecker.Citation("src/Login.java", 1, 5, true, null, "https://github.com/x")),
+                        List.of(new AgentStep(1, "readFile", "src/Login.java lines 1-5", "read lines 1-5", 2)), 4));
 
         mvc.perform(post("/api/ask").contentType(MediaType.APPLICATION_JSON).content(BODY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.repo").value("acme/demo"))
                 .andExpect(jsonPath("$.answer").value("Login is in [src/Login.java:1-5]"))
+                .andExpect(jsonPath("$.citations[0].verified").value(true))
+                .andExpect(jsonPath("$.steps[0].tool").value("readFile"))
                 .andExpect(jsonPath("$.toolCalls").value(4));
     }
 

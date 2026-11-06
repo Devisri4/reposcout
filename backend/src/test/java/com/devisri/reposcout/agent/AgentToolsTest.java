@@ -35,6 +35,26 @@ class AgentToolsTest {
     }
 
     @Test
+    void logsEveryStepAndRemembersWhichLinesWereRead() throws IOException {
+        Files.writeString(tmp.resolve("App.java"), "class App {}\nvoid run() {}\n");
+        AgentTools tools = new AgentTools(new RepoTools(new LoadedRepo("a", "b", "main", tmp)), 15);
+
+        tools.listFiles("");
+        tools.searchCode("run");
+        tools.readFile("App.java", 1, 2);
+        tools.readFile("Missing.java", 1, 2);
+
+        assertThat(tools.steps()).extracting(AgentStep::number, AgentStep::tool, AgentStep::summary).containsExactly(
+                org.assertj.core.groups.Tuple.tuple(1, "listFiles", "1 entries"),
+                org.assertj.core.groups.Tuple.tuple(2, "searchCode", "1 match(es)"),
+                org.assertj.core.groups.Tuple.tuple(3, "readFile", "read lines 1-2"),
+                org.assertj.core.groups.Tuple.tuple(4, "readFile",
+                        "Error: file 'Missing.java' does not exist. Use listFiles or searchCode to find the right path."));
+        assertThat(tools.readRanges().covers("App.java", 1, 2)).isTrue();
+        assertThat(tools.readRanges().readAny("Missing.java")).isFalse();
+    }
+
+    @Test
     void refusesToRunWithoutAnApiKeyBeforeDownloadingAnything() {
         RepoLoader loader = mock(RepoLoader.class);
         RepoAgent agent = new RepoAgent(mock(ChatClient.Builder.class, org.mockito.Answers.RETURNS_MOCKS), loader,

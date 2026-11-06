@@ -1,5 +1,8 @@
 package com.devisri.reposcout.agent;
 
+import java.util.List;
+
+import com.devisri.reposcout.citations.CitationChecker;
 import com.devisri.reposcout.repo.LoadedRepo;
 import com.devisri.reposcout.repo.RepoLoader;
 import com.devisri.reposcout.tools.RepoTools;
@@ -51,8 +54,9 @@ public class RepoAgent {
         this.props = props;
     }
 
-    /** What the agent produced for one question. */
-    public record Result(LoadedRepo repo, String answer, int toolCalls) {
+    /** What the agent produced for one question, after its citations were checked. */
+    public record Result(LoadedRepo repo, String answer, List<CitationChecker.Citation> citations,
+                         List<AgentStep> steps, int toolCalls) {
     }
 
     public Result ask(String repoUrl, String question) {
@@ -61,7 +65,8 @@ public class RepoAgent {
                     "The AI key is not configured on the server (set the GROQ_API_KEY environment variable).", false, null);
         }
         LoadedRepo repo = loader.load(repoUrl);
-        AgentTools tools = new AgentTools(new RepoTools(repo), props.maxToolCalls());
+        RepoTools repoTools = new RepoTools(repo);
+        AgentTools tools = new AgentTools(repoTools, props.maxToolCalls());
 
         long started = System.currentTimeMillis();
         try {
@@ -79,7 +84,9 @@ public class RepoAgent {
             if (answer == null || answer.isBlank()) {
                 throw new AgentException("The AI returned an empty answer. Please try again.", true, null);
             }
-            return new Result(repo, answer.strip(), tools.callCount());
+            CitationChecker.CheckedAnswer checked =
+                    CitationChecker.check(answer.strip(), repo, repoTools, tools.readRanges());
+            return new Result(repo, checked.answer(), checked.citations(), tools.steps(), tools.callCount());
         } catch (TransientAiException | ResourceAccessException e) {
             log.warn("AI call failed (temporary): {}", e.getMessage());
             throw new AgentException(
