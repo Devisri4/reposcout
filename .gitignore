@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# build output
+target/
+dist/
+
+# env files (never commit keys)
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+*.iml
+.vscode/
