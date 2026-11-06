@@ -43,8 +43,8 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 |---|---|---|---|
 | 1 | Repo, Spring Boot skeleton, CI (React skeleton moved to step 6) | Build + health test pass | Done |
 | 2 | Repo loader: download zip, unpack safely, size limit | Unit tests pass | Done |
-| 3 | Tools: listFiles, readFile, searchCode (no AI) | Unit tests pass | Next |
-| 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | |
+| 3 | Tools: listFiles, readFile, searchCode (no AI) | Unit tests pass | Done |
+| 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | Next |
 | 5 | Citation checker + step log | Answers show verified files | |
 | 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | |
 | 7 | Deploy (Render + Vercel), README, screenshots | Live demo link | |
