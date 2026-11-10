@@ -32,6 +32,9 @@ class AskControllerTest {
     @MockitoBean
     private RepoAgent agent;
 
+    @MockitoBean
+    private RateLimiter limiter;
+
     private static final String BODY = """
             {"repoUrl":"https://github.com/acme/demo","question":"How does login work?"}
             """;
@@ -51,6 +54,18 @@ class AskControllerTest {
                 .andExpect(jsonPath("$.citations[0].verified").value(true))
                 .andExpect(jsonPath("$.steps[0].tool").value("readFile"))
                 .andExpect(jsonPath("$.toolCalls").value(4));
+    }
+
+    @Test
+    void stopsVisitorsOverTheLimitBeforeCallingTheAi() throws Exception {
+        doThrow(new RateLimiter.LimitReachedException("You've asked 10 questions in the last hour."))
+                .when(limiter).check("203.0.113.9");
+
+        mvc.perform(post("/api/ask").contentType(MediaType.APPLICATION_JSON).content(BODY)
+                        .header("X-Forwarded-For", "10.0.0.1, 203.0.113.9"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("You've asked 10 questions in the last hour."));
+        org.mockito.Mockito.verifyNoInteractions(agent);
     }
 
     @Test

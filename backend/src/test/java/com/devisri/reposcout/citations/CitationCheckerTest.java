@@ -44,7 +44,7 @@ class CitationCheckerTest {
         var result = check("Login happens in [src/auth/Login.java:10-20].");
 
         assertThat(result.answer()).isEqualTo(
-                "Login happens in [src/auth/Login.java:10-20](https://github.com/acme/demo/blob/main/src/auth/Login.java#L10-L20).");
+                "Login happens in [Login.java:10-20](https://github.com/acme/demo/blob/main/src/auth/Login.java#L10-L20).");
         assertThat(result.citations()).singleElement().satisfies(c -> {
             assertThat(c.verified()).isTrue();
             assertThat(c.url()).endsWith("#L10-L20");
@@ -57,6 +57,17 @@ class CitationCheckerTest {
 
         assertThat(result.citations()).allMatch(CitationChecker.Citation::verified).hasSize(2);
         assertThat(result.answer()).contains("Login.java#L5)").contains("#L6-L7)");
+    }
+
+    @Test
+    void checksCitationsWrittenWithOtherBracketsToo() {
+        // gpt-oss on Groq writes 【path:lines】; these must be verified like [path:lines], never skipped.
+        var result = check("Saved here【src/auth/Login.java:10–12】 and here【src/auth/Fake.java:1】.");
+
+        assertThat(result.answer())
+                .startsWith("Saved here [Login.java:10-12](https://github.com/acme/demo/blob/main/src/auth/Login.java#L10-L12) and here.")
+                .doesNotContain("【");
+        assertThat(result.citations()).extracting(CitationChecker.Citation::verified).containsExactly(true, false);
     }
 
     @Test

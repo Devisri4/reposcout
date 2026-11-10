@@ -40,7 +40,7 @@ public class RepoAgent {
 
             How to answer:
             - Explain clearly in Markdown, using short paragraphs or bullet points, in under 300 words.
-            - Back every claim about the code with a citation in exactly this form: [path/to/File.java:12-30]
+            - Back every claim about the code with a citation in exactly this form, with square brackets: [path/to/File.java:12-30]
               (path from the repository root, then the line range). Example: [src/auth/LoginService.java:4-6]
             - Only cite lines you actually read with readFile. Do not write line numbers anywhere except inside citations.
             - If the repository does not answer the question, say so honestly.

@@ -48,7 +48,7 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 | 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | Done |
 | 5 | Citation checker + step log | Answers show verified files | Done |
 | 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | Done (CI build green; Codespaces blocked on office network, confirmed on the live site) |
-| 7 | Deploy (Render + Vercel), README, screenshots | Live demo link | Next: deploy files + README ready |
+| 7 | Deploy (Render + Vercel), README, screenshots | Live demo link | Done: https://reposcout-nine.vercel.app |
 
 Phase 1 is done when any public repo can be pasted, a question asked, and a correct answer with verified
 file links comes back — live on the internet.

@@ -22,7 +22,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 public final class CitationChecker {
 
     // [path:12] or [path:12-30]; the path has no spaces or brackets. A leading "/" or "./" is allowed.
-    private static final Pattern CITATION = Pattern.compile("\\[([^\\[\\]\\s:]+):(\\d+)(?:\\s*-\\s*(\\d+))?\\]");
+    // Some models (e.g. gpt-oss) write 【path:12-30】 instead, and may use an en dash; both are accepted so
+    // that no citation can skip the check just by using different brackets.
+    private static final Pattern CITATION = Pattern.compile(
+            "[\\[【]([^\\[\\]【】\\s:]+):(\\d+)(?:\\s*[-–]\\s*(\\d+))?[\\]】]");
 
     private CitationChecker() {
     }
@@ -55,7 +58,13 @@ public final class CitationChecker {
             Citation c = seen.computeIfAbsent(path + ":" + start + "-" + end,
                     k -> verify(path, start, end, repo, tools, read));
             if (c.verified()) {
-                out.append('[').append(label(c)).append("](").append(c.url()).append(')');
+                // Keep the link readable inside a sentence: a space before it, and only the file name shown
+                // (the full path is in the link and in the citations list).
+                if (!out.isEmpty() && !Character.isWhitespace(out.charAt(out.length() - 1))
+                        && out.charAt(out.length() - 1) != '(') {
+                    out.append(' ');
+                }
+                out.append('[').append(shortLabel(c)).append("](").append(c.url()).append(')');
             } else {
                 removed++;
                 // Drop the space before the removed reference so "see X [bad:1]." becomes "see X."
@@ -110,8 +119,10 @@ public final class CitationChecker {
         }
     }
 
-    private static String label(Citation c) {
-        return c.path() + ":" + (c.startLine() == c.endLine() ? c.startLine() : c.startLine() + "-" + c.endLine());
+    /** {@code src/auth/Login.java:10-20} is shown as {@code Login.java:10-20}. */
+    private static String shortLabel(Citation c) {
+        String file = c.path().substring(c.path().lastIndexOf('/') + 1);
+        return file + ":" + (c.startLine() == c.endLine() ? c.startLine() : c.startLine() + "-" + c.endLine());
     }
 
     private static String cleanPath(String path) {

@@ -21,6 +21,11 @@ public class ApiErrors {
         return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(RateLimiter.LimitReachedException.class)
+    ResponseEntity<ErrorResponse> limited(RateLimiter.LimitReachedException e) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(AgentException.class)
     ResponseEntity<ErrorResponse> agent(AgentException e) {
         HttpStatus status = e.isTemporary() ? HttpStatus.TOO_MANY_REQUESTS : HttpStatus.SERVICE_UNAVAILABLE;

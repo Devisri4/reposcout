@@ -28,6 +28,11 @@ class RepoScoutApplicationTests {
     }
 
     @Test
+    void springAiUsesOurGroqErrorHandler(@Autowired org.springframework.web.client.ResponseErrorHandler handler) {
+        assertThat(handler).isInstanceOf(com.devisri.reposcout.agent.GroqErrorHandler.class);
+    }
+
+    @Test
     void theFrontendMayCallTheApiFromItsOwnDomain() {
         ResponseEntity<String> response = preflight("https://reposcout.example.com");
 
