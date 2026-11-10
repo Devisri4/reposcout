@@ -37,3 +37,20 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build
         run: npm run build
+
+  docker:
+    name: Backend Docker image (what Render runs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t reposcout-api backend
+      - name: Start container and check health
+        run: |
+          docker run -d --name api -p 8080:8080 -m 512m reposcout-api
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8080/actuator/health | grep -q UP; then echo "Health UP"; exit 0; fi
+            sleep 3
+          done
+          docker logs api
+          exit 1

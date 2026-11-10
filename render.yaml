@@ -1,0 +1,19 @@
+# Render Blueprint: creates the RepoScout backend on Render's free plan.
+# Keys are NOT stored here; Render asks for them when the Blueprint is created.
+services:
+  - type: web
+    name: reposcout-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
