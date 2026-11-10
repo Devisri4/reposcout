@@ -1,0 +1,19 @@
+{
+  "name": "RepoScout (Java 21 + Node 22)",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "postCreateCommand": "cd frontend && npm install --no-audit --no-fund",
+  "forwardPorts": [5173, 8080],
+  "portsAttributes": {
+    "5173": { "label": "RepoScout page", "onAutoForward": "openBrowser" },
+    "8080": { "label": "RepoScout API", "onAutoForward": "silent" }
+  },
+  "secrets": {
+    "GROQ_API_KEY": {
+      "description": "Free Groq API key for the agent",
+      "documentationUrl": "https://console.groq.com/keys"
+    }
+  }
+}

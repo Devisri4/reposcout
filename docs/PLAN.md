@@ -47,7 +47,7 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 | 3 | Tools: listFiles, readFile, searchCode (no AI) | Unit tests pass | Done |
 | 4 | Spring AI + Groq: agent answers using the tools | Real answers via HTTP | Done |
 | 5 | Citation checker + step log | Answers show verified files | Done |
-| 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | Next |
+| 6 | React UI: repo input, chat, file links, steps panel (needs Node.js) | Works locally | Code done; confirm in Codespaces |
 | 7 | Deploy (Render + Vercel), README, screenshots | Live demo link | |
 
 Phase 1 is done when any public repo can be pasted, a question asked, and a correct answer with verified
