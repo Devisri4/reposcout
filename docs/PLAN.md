@@ -86,7 +86,7 @@ Job description + GitHub username
 | 10 | Bullet writer + verifier: bullets citing evidence ids, drop unproven claims, skill gaps; `POST /api/match` | Real results via HTTP | Done |
 | 11 | Postgres (Neon) + Flyway: save each match, `GET /api/matches/{id}` share link | Tests pass on H2 and in CI | Done (Postgres test runs in CI) |
 | 12 | Job match UI: form, requirement checklist, bullets with file links, dropped claims, gaps | Works in the browser | Done |
-| 13 | Deploy (Neon + Render), README, screenshots | Live job match | Next |
+| 13 | Deploy (Neon + Render), README, screenshots | Live job match | Done (live match saved in Neon, share link reopens) |
 
 Phase 2 is done when a job description and a GitHub username give resume bullets that link to real files in
 that user's repos, with unproven claims dropped and gaps listed — live on the internet.
