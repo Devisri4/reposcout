@@ -96,10 +96,15 @@ public final class CitationChecker {
         return new CheckedAnswer(text, new ArrayList<>(seen.values()));
     }
 
-    private static Citation verify(String path, int start, int end, LoadedRepo repo, RepoTools tools, ReadRanges read) {
+    private static Citation verify(String cited, int start, int end, LoadedRepo repo, RepoTools tools, ReadRanges read) {
         if (start < 1 || end < start) {
-            return new Citation(path, start, end, false, "invalid line range", null);
+            return new Citation(cited, start, end, false, "invalid line range", null);
         }
+        // The model sometimes cites just the file name ("application.properties"). If exactly one file it read
+        // has that name, use its full path; the normal checks below still apply.
+        String path = tools.lineCount(cited).isPresent() || cited.contains("..")
+                ? cited
+                : read.uniqueReadFileEndingWith(cited).orElse(cited);
         Optional<Integer> lines = tools.lineCount(path);
         if (lines.isEmpty()) {
             return new Citation(path, start, end, false, "file does not exist in the repository", null);

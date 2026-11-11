@@ -32,4 +32,13 @@ public class ReadRanges {
     public synchronized boolean readAny(String path) {
         return byFile.containsKey(path);
     }
+
+    /**
+     * The one file the agent read whose path ends with {@code /name}, e.g. {@code application.properties}
+     * matches {@code src/main/resources/application.properties}. Empty if none or more than one match.
+     */
+    public synchronized java.util.Optional<String> uniqueReadFileEndingWith(String name) {
+        List<String> matches = byFile.keySet().stream().filter(p -> p.endsWith("/" + name)).toList();
+        return matches.size() == 1 ? java.util.Optional.of(matches.get(0)) : java.util.Optional.empty();
+    }
 }

@@ -90,6 +90,44 @@ public class GitHubClient {
         }
     }
 
+    /** A public repo in a user's list. {@code size} is in KB; {@code pushedAt} is an ISO timestamp. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record RepoSummary(
+            @JsonProperty("name") String name,
+            @JsonProperty("fork") boolean fork,
+            @JsonProperty("archived") boolean archived,
+            @JsonProperty("size") long sizeKb,
+            @JsonProperty("pushed_at") String pushedAt,
+            @JsonProperty("description") String description) {
+    }
+
+    /** The user's own public repos, most recently pushed first (one API call, up to 100 repos). */
+    public java.util.List<RepoSummary> listPublicRepos(String username) {
+        URI uri = UriComponentsBuilder.fromUriString(props.githubApiUrl())
+                .pathSegment("users", username, "repos")
+                .queryParam("type", "owner").queryParam("sort", "pushed").queryParam("per_page", 100)
+                .build().encode().toUri();
+        try {
+            RepoSummary[] repos = rest.get().uri(uri)
+                    .header("Accept", "application/vnd.github+json")
+                    .retrieve()
+                    .onStatus(s -> s.value() == 404, (req, res) -> {
+                        throw new RepoLoadException("GitHub user " + username + " was not found.");
+                    })
+                    .onStatus(s -> s.value() == 403 || s.value() == 429, (req, res) -> {
+                        throw new RepoLoadException("GitHub's rate limit was reached. Please try again in a few minutes.");
+                    })
+                    .onStatus(HttpStatusCode::isError, (req, res) -> {
+                        throw new RepoLoadException("GitHub returned an error (" + res.getStatusCode().value() + ").");
+                    })
+                    .body(RepoSummary[].class);
+            return repos == null ? java.util.List.of() : java.util.List.of(repos);
+        } catch (RestClientException e) {
+            log.warn("Listing repos of {} failed: {}", username, e.getMessage());
+            throw new RepoLoadException("Could not reach GitHub. Please try again.", e);
+        }
+    }
+
     /** Streams the branch zip to {@code target}, stopping if it grows past {@code maxBytes}. */
     public void downloadZip(RepoRef ref, String branch, Path target, long maxBytes) {
         URI uri = UriComponentsBuilder.fromUriString(props.githubDownloadUrl())

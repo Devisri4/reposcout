@@ -211,7 +211,8 @@ public class RepoTools {
         return p;
     }
 
-    private List<Path> allTextFiles() {
+    /** Every text file in the repo (binaries and node_modules skipped), sorted by path. */
+    public List<Path> allTextFiles() {
         try (Stream<Path> walk = Files.walk(root)) {
             return walk.filter(Files::isRegularFile)
                     .filter(p -> root.relativize(p).getNameCount() > 0)
@@ -247,7 +248,7 @@ public class RepoTools {
     }
 
     /** Reads UTF-8, replacing broken characters instead of failing on odd encodings. */
-    private static List<String> readLines(Path file) throws IOException {
+    public static List<String> readLines(Path file) throws IOException {
         var decoder = StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);

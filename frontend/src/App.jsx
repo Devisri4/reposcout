@@ -5,6 +5,7 @@ import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
 import HowItWorks from './components/HowItWorks.jsx';
 import AnswerCard from './components/AnswerCard.jsx';
+import JobMatch from './components/JobMatch.jsx';
 
 const EXAMPLE_REPO = 'https://github.com/spring-projects/spring-petclinic';
 const EXAMPLE_QUESTIONS = [
@@ -80,7 +81,7 @@ export default function App() {
   return (
     <>
       <Navbar server={server} />
-      <Hero onTry={tryExample} />
+      <Hero onTry={tryExample} onMatch={() => document.getElementById('match')?.scrollIntoView({ behavior: 'smooth' })} />
 
       <main className="section" id="ask" ref={askRef}>
         <div className="section-head row">
@@ -173,6 +174,8 @@ export default function App() {
           </form>
         </div>
       </main>
+
+      <JobMatch />
 
       <HowItWorks />
 

@@ -15,7 +15,8 @@ export default function Navbar({ server }) {
           </span>
         </a>
         <nav className="nav-links">
-          <a href="#ask">Try it</a>
+          <a href="#ask">Ask a repo</a>
+          <a href="#match">Job match</a>
           <a href="#how">How it works</a>
         </nav>
         <div className="nav-right">

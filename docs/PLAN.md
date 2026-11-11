@@ -52,3 +52,41 @@ React page  ->  Spring Boot API  ->  Agent (Spring AI + Groq)
 
 Phase 1 is done when any public repo can be pasted, a question asked, and a correct answer with verified
 file links comes back — live on the internet.
+
+## Architecture (Phase 2: job match)
+
+```
+Job description + GitHub username
+        |
+        v
+1. RequirementExtractor (1 AI call)   -> up to 10 requirements, each with code search terms
+2. EvidenceFinder (plain Java)        -> loads the user's public repos (Phase 1 loader), searches them,
+                                         keeps the best code snippets per requirement as evidence E1, E2...
+3. BulletWriter (1 AI call)           -> resume bullets that may only point to evidence ids
+4. MatchVerifier (plain Java)         -> drops bullets with no valid evidence, lists skill gaps
+5. Saved in Postgres                  -> shareable result link
+```
+
+## Key decisions (Phase 2)
+
+| Decision | Why |
+|---|---|
+| GitHub username instead of login | Public repos need no login; GitHub OAuth plus cross-site cookies between Vercel and Render would add a lot of setup for no extra evidence. |
+| Evidence is found by plain Java search, not by the AI | Two AI calls per job instead of dozens of tool calls: fits Groq's 8,000 tokens/minute, and every snippet is real code. |
+| Bullets may only cite evidence ids (E1, E2...) | The AI cannot invent a file or line; unknown ids are dropped in Java, and bullets left with none are removed. |
+| Postgres on Neon (free), H2 when no database is configured | Neon's free plan does not expire; H2 keeps local runs and tests working with no setup. Flyway manages the schema. |
+| At most 6 repos per user (most recently pushed, not forks) | Keeps download time and disk use small on the free server. |
+
+## Phase 2 build steps
+
+| # | Step | Done when | Status |
+|---|---|---|---|
+| 8 | Requirement extractor: job description -> requirements + search terms (AI, structured output) | Unit tests pass | Done |
+| 9 | Evidence finder: list a user's public repos, search them, pick snippets per requirement (no AI) | Unit tests pass | Done |
+| 10 | Bullet writer + verifier: bullets citing evidence ids, drop unproven claims, skill gaps; `POST /api/match` | Real results via HTTP | Done |
+| 11 | Postgres (Neon) + Flyway: save each match, `GET /api/matches/{id}` share link | Tests pass on H2 and in CI | Done (Postgres test runs in CI) |
+| 12 | Job match UI: form, requirement checklist, bullets with file links, dropped claims, gaps | Works in the browser | Done |
+| 13 | Deploy (Neon + Render), README, screenshots | Live job match | Next |
+
+Phase 2 is done when a job description and a GitHub username give resume bullets that link to real files in
+that user's repos, with unproven claims dropped and gaps listed — live on the internet.

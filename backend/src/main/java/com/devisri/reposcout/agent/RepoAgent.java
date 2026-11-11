@@ -94,24 +94,8 @@ public class RepoAgent {
             CitationChecker.CheckedAnswer checked =
                     CitationChecker.check(answer.strip(), repo, repoTools, tools.readRanges());
             return new Result(repo, checked.answer(), checked.citations(), tools.steps(), tools.callCount());
-        } catch (TransientAiException | ResourceAccessException e) {
-            log.warn("AI call failed (temporary): {}", e.getMessage());
-            throw new AgentException(
-                    "The AI service is busy or rate limited right now. Please try again in a minute.", true, e);
-        } catch (NonTransientAiException e) {
-            log.error("AI call failed: {}", e.getMessage());
-            throw new AgentException(friendly(e), e.getMessage() != null && e.getMessage().contains("429"), e);
+        } catch (TransientAiException | NonTransientAiException | ResourceAccessException e) {
+            throw AgentException.from(e, "The AI could not finish this question. Please try again or rephrase it.");
         }
-    }
-
-    private static String friendly(NonTransientAiException e) {
-        String msg = e.getMessage() == null ? "" : e.getMessage();
-        if (msg.contains("429") || msg.contains("rate_limit")) {
-            return "The free AI quota is used up for the moment. Please try again in a minute.";
-        }
-        if (msg.contains("401") || msg.contains("invalid_api_key")) {
-            return "The server's AI key was rejected. Check GROQ_API_KEY.";
-        }
-        return "The AI could not finish this question. Please try again or rephrase it.";
     }
 }

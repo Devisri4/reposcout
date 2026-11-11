@@ -90,6 +90,27 @@ class CitationCheckerTest {
     }
 
     @Test
+    void findsTheFullPathWhenOnlyTheFileNameIsCited() {
+        // Seen live: the model cited [application.properties:1-4] for src/main/resources/application.properties.
+        var result = check("Configured in [Login.java:5-6].");
+
+        assertThat(result.citations()).singleElement().satisfies(c -> {
+            assertThat(c.verified()).isTrue();
+            assertThat(c.path()).isEqualTo("src/auth/Login.java");
+            assertThat(c.url()).endsWith("/blob/main/src/auth/Login.java#L5-L6");
+        });
+    }
+
+    @Test
+    void doesNotGuessWhenTheShortNameIsAmbiguousOrUnread() {
+        read.add("test/auth/Login.java", 1, 10);   // a second read file with the same name
+        assertThat(check("[Login.java:5]").citations().get(0).verified()).isFalse();
+
+        // README.md exists at the top level but was never read: still removed.
+        assertThat(check("[README.md:1]").citations().get(0).reason()).isEqualTo("the agent never opened this file");
+    }
+
+    @Test
     void removesFilesThatDoNotExist() {
         var result = check("It uses a hasher [src/auth/Hasher.java:1-5].");
 

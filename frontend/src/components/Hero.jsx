@@ -1,7 +1,7 @@
-import { ArrowRight, CircleCheck, CircleX, Github, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Briefcase, CircleCheck, CircleX, ShieldCheck } from 'lucide-react';
 
 /** Top section: what RepoScout is, with a small preview of a checked answer. */
-export default function Hero({ onTry }) {
+export default function Hero({ onTry, onMatch }) {
   return (
     <section className="hero" id="top">
       <div className="hero-inner">
@@ -22,10 +22,10 @@ export default function Hero({ onTry }) {
               Try it on spring-petclinic
               <ArrowRight size={18} aria-hidden="true" />
             </button>
-            <a className="btn btn-outline" href="https://github.com/Devisri4/reposcout" target="_blank" rel="noreferrer">
-              <Github size={18} aria-hidden="true" />
-              View source
-            </a>
+            <button type="button" className="btn btn-outline" onClick={onMatch}>
+              <Briefcase size={18} aria-hidden="true" />
+              Match a job to your repos
+            </button>
           </div>
         </div>
 
