@@ -25,7 +25,10 @@ public final class CitationChecker {
     // Some models (e.g. gpt-oss) write 【path:12-30】 instead, and may use an en dash; both are accepted so
     // that no citation can skip the check just by using different brackets.
     private static final Pattern CITATION = Pattern.compile(
-            "[\\[【]([^\\[\\]【】\\s:]+):(\\d+)(?:\\s*[-–]\\s*(\\d+))?[\\]】]");
+            "[\\[【]([^\\[\\]【】\\s:]+):(\\d+)(?:\\s*[-‐‑‒–—−]\\s*(\\d+))?[\\]】]");
+
+    // Anything else in 【...】 brackets is a reference the checker could not read; it is removed, never shown.
+    private static final Pattern LEFTOVER = Pattern.compile("【[^】]*】");
 
     private CitationChecker() {
     }
@@ -75,7 +78,18 @@ public final class CitationChecker {
         }
         out.append(answer.substring(last));
 
-        String text = out.toString().strip();
+        Matcher leftover = LEFTOVER.matcher(out.toString());
+        StringBuilder cleaned = new StringBuilder();
+        while (leftover.find()) {
+            removed++;
+            leftover.appendReplacement(cleaned, "");
+            while (!cleaned.isEmpty() && (cleaned.charAt(cleaned.length() - 1) == ' ' || cleaned.charAt(cleaned.length() - 1) == '\t')) {
+                cleaned.setLength(cleaned.length() - 1);
+            }
+        }
+        leftover.appendTail(cleaned);
+
+        String text = cleaned.toString().strip();
         if (removed > 0) {
             text += "\n\n_Note: " + removed + " file reference(s) could not be verified and were removed._";
         }

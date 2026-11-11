@@ -55,6 +55,29 @@ class AgentToolsTest {
     }
 
     @Test
+    void showsTheModelTheParameterNamesItNaturallyUses() {
+        AgentTools tools = new AgentTools(new RepoTools(new LoadedRepo("a", "b", "main", tmp)), 15);
+
+        String schema = java.util.Arrays.stream(org.springframework.ai.support.ToolCallbacks.from(tools))
+                .filter(t -> t.getToolDefinition().name().equals("readFile"))
+                .findFirst().orElseThrow()
+                .getToolDefinition().inputSchema();
+
+        // gpt-oss writes line_start / line_end; other names were rejected by Groq as tool_use_failed.
+        assertThat(schema).contains("\"line_start\"").contains("\"line_end\"").doesNotContain("startLine");
+        assertThat(schema).containsPattern("\"required\"\\s*:\\s*\\[\\s*\"path\"\\s*\\]");
+    }
+
+    @Test
+    void readsFromTheTopWhenTheModelLeavesOutLineNumbers() throws IOException {
+        Files.writeString(tmp.resolve("App.java"), "class App {}\nvoid run() {}\n");
+        AgentTools tools = new AgentTools(new RepoTools(new LoadedRepo("a", "b", "main", tmp)), 15);
+
+        assertThat(tools.readFile("App.java", null, null)).startsWith("File: App.java (lines 1-2 of 2)");
+        assertThat(tools.readRanges().covers("App.java", 1, 2)).isTrue();
+    }
+
+    @Test
     void refusesToRunWithoutAnApiKeyBeforeDownloadingAnything() {
         RepoLoader loader = mock(RepoLoader.class);
         RepoAgent agent = new RepoAgent(mock(ChatClient.Builder.class, org.mockito.Answers.RETURNS_MOCKS), loader,

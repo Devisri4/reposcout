@@ -39,6 +39,8 @@ public class GitHubClient {
         }
     }
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GitHubClient.class);
+
     private final RestClient rest;
     private final RepoProperties props;
 
@@ -83,6 +85,7 @@ public class GitHubClient {
             }
             return info;
         } catch (RestClientException e) {
+            log.warn("GitHub API call for {} failed: {}", ref, e.getMessage());
             throw new RepoLoadException("Could not reach GitHub. Please try again.", e);
         }
     }
@@ -102,6 +105,7 @@ public class GitHubClient {
                 return null;
             });
         } catch (RestClientException e) {
+            log.warn("Zip download for {} failed: {}", ref, e.getMessage());
             throw new RepoLoadException("Could not download " + ref + ". Please try again.", e);
         }
     }

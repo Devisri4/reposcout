@@ -1,3 +1,5 @@
+import { CircleCheck, CircleX } from 'lucide-react';
+
 /** The file references from the answer: verified ones link to GitHub, removed ones show why. */
 export default function CitationList({ citations = [] }) {
   const verified = citations.filter((c) => c.verified);
@@ -13,7 +15,7 @@ export default function CitationList({ citations = [] }) {
       <ul className="citations">
         {verified.map((c) => (
           <li key={key(c)}>
-            <span className="tick" aria-label="verified">✓</span>
+            <CircleCheck size={16} className="tick" aria-label="verified" />
             <a href={c.url} target="_blank" rel="noreferrer">
               <code>{label(c)}</code>
             </a>
@@ -21,9 +23,11 @@ export default function CitationList({ citations = [] }) {
         ))}
         {removed.map((c) => (
           <li key={key(c)} className="removed">
-            <span className="cross" aria-label="removed">✗</span>
-            <code>{label(c)}</code>
-            <span className="muted small"> — {c.reason}</span>
+            <CircleX size={16} className="cross" aria-label="removed" />
+            <span className="cite-body">
+              <code>{label(c)}</code>
+              <span className="muted small"> — {c.reason}</span>
+            </span>
           </li>
         ))}
       </ul>

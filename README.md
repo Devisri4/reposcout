@@ -9,7 +9,7 @@ searching, listing and reading files — then answers with links to the exact li
 **Live demo: https://reposcout-nine.vercel.app**
 <sub>(free hosting: the first question after a quiet period can take about a minute while the server wakes up)</sub>
 
-![RepoScout answering a question about spring-petclinic](docs/screenshots/answer.png)
+![RepoScout home page](docs/screenshots/hero.png)
 
 ## Features
 
@@ -23,7 +23,9 @@ searching, listing and reading files — then answers with links to the exact li
 - **Built for free tiers** — small file reads, a tool budget and patient retries keep it inside Groq's free
   8,000 tokens/minute; a per-visitor limit protects the quota on the public demo.
 
-![Agent steps and verified files panels](docs/screenshots/steps.png)
+| Answer with verified file links and the agent's steps | On a phone |
+|---|---|
+| ![RepoScout answering a question about spring-petclinic](docs/screenshots/answer.png) | <img src="docs/screenshots/mobile.png" alt="RepoScout on a phone" width="260"> |
 
 ## How it works
 
@@ -48,7 +50,7 @@ React page (Vercel)  ── POST /api/ask ──►  Spring Boot API (Render, Do
 |---|---|
 | Backend | Java 21, Spring Boot 3.5, Spring Web, Bean Validation, Actuator |
 | AI | Spring AI 1.1 (`@Tool` tool calling, retries), Groq free tier via its OpenAI-compatible API, model `openai/gpt-oss-120b` |
-| Frontend | React 18, Vite 5, react-markdown + GFM, plain CSS (light/dark, mobile) |
+| Frontend | React 18, Vite 5, react-markdown + GFM, lucide icons, Inter, plain CSS (light/dark, mobile-first) |
 | Testing | JUnit 5, AssertJ, Mockito, MockMvc, a fake GitHub server (JDK `HttpServer`); Vitest + Testing Library |
 | CI/CD | GitHub Actions (backend tests, frontend tests + build, Docker image + health check), auto-deploy to Render and Vercel |
 | Hosting | Render (Docker, free plan) for the API, Vercel (Hobby) for the page |
@@ -71,15 +73,15 @@ The server downloads and reads **untrusted code from the internet** and exposes 
 
 ## Testing
 
-**76 backend tests** and **7 frontend tests** run on every push. Highlights:
+**80 backend tests** and **7 frontend tests** run on every push. Highlights:
 
 - **Repo loader** — real HTTP against a fake GitHub server: download, cache reuse, private/missing repos,
   size limit, runaway download; zip slip, total-size and file-count limits.
 - **Tools** — path escapes (`../`, `/../`, `src/../../`), binary files, 120-line read cap, search cap,
   `node_modules` skipped.
-- **Citation checker** — missing files, lines past the end, lines never read, invalid ranges, other bracket styles
+- **Citation checker** — missing files, lines past the end, lines never read, invalid ranges, every bracket and dash style
   the model uses, code snippets left untouched.
-- **Agent** — tool budget, step log, Groq error handling (rate limits and the two known model glitches are
+- **Agent** — tool budget, step log, the tool parameter names the model expects, Groq error handling (rate limits and the two known model glitches are
   retried; bad keys or unknown models fail at once).
 - **API** — validation, error codes, visitor limit, CORS allowed/blocked.
 - **Frontend** — the page asks the API and renders the answer, file links, steps and server errors.

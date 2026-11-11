@@ -30,7 +30,7 @@ public class RepoAgent {
             You cannot see the code until you use your tools:
             - listFiles(folder): list one folder ("" is the top level)
             - searchCode(text): find lines containing a word or name
-            - readFile(path, startLine, endLine): read numbered lines from a file
+            - readFile(path, line_start, line_end): read numbered lines from a file
 
             How to work:
             1. Start with listFiles("") or searchCode with key words from the question.
@@ -40,6 +40,7 @@ public class RepoAgent {
 
             How to answer:
             - Explain clearly in Markdown, using short paragraphs or bullet points, in under 300 words.
+              Do not use tables or HTML tags (such as <br>); they do not display well.
             - Back every claim about the code with a citation in exactly this form, with square brackets: [path/to/File.java:12-30]
               (path from the repository root, then the line range). Example: [src/auth/LoginService.java:4-6]
             - Only cite lines you actually read with readFile. Do not write line numbers anywhere except inside citations.

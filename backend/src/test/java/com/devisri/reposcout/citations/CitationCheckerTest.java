@@ -71,6 +71,25 @@ class CitationCheckerTest {
     }
 
     @Test
+    void acceptsEveryKindOfDashTheModelWrites() {
+        // Real answer from gpt-oss used a non-breaking hyphen (U+2011): 【src/flask/app.py:547‑552】
+        for (String dash : new String[]{"-", "‐", "‑", "‒", "–", "—", "−"}) {
+            var result = check("See【src/auth/Login.java:10" + dash + "12】.");
+            assertThat(result.citations()).as("dash %s", dash).singleElement()
+                    .satisfies(c -> assertThat(c.endLine()).isEqualTo(12));
+        }
+    }
+
+    @Test
+    void neverShowsABracketedReferenceItCouldNotCheck() {
+        var result = check("It is in【src/auth/Login.java, around line 10】 and【weird】.");
+
+        assertThat(result.answer()).doesNotContain("【").doesNotContain("】")
+                .startsWith("It is in and.")
+                .contains("2 file reference(s) could not be verified");
+    }
+
+    @Test
     void removesFilesThatDoNotExist() {
         var result = check("It uses a hasher [src/auth/Hasher.java:1-5].");
 

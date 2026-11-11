@@ -51,9 +51,14 @@ public class AgentTools {
             + "At most " + RepoTools.MAX_LINES_PER_READ + " lines per call; prefer about 60.")
     public String readFile(
             @ToolParam(description = "File path from the repository root, e.g. \"src/App.java\"") String path,
-            @ToolParam(description = "First line to read, starting at 1") int startLine,
-            @ToolParam(description = "Last line to read (inclusive)") int endLine) {
-        return run("readFile", path + " lines " + startLine + "-" + endLine, () -> tools.readFile(path, startLine, endLine), out -> {
+            // Named line_start / line_end (not startLine / endLine) because that is what gpt-oss writes on its
+            // own; with other names Groq rejected many calls as tool_use_failed. Both are optional.
+            @ToolParam(description = "First line to read, starting at 1 (default 1)", required = false) Integer line_start,
+            @ToolParam(description = "Last line to read, inclusive (default: about 120 lines after line_start)", required = false) Integer line_end) {
+        int startLine = line_start == null || line_start < 1 ? 1 : line_start;
+        int endLine = line_end == null ? 0 : line_end;
+        return run("readFile", path + " lines " + startLine + "-" + (endLine > 0 ? endLine : "end"),
+                () -> tools.readFile(path, startLine, endLine), out -> {
             Matcher m = READ_HEADER.matcher(out);
             if (!m.find()) {
                 return firstLine(out);
