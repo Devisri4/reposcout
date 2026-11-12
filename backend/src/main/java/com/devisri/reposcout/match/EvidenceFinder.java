@@ -144,7 +144,8 @@ public class EvidenceFinder {
                             continue;
                         }
                         for (String term : req.searchTerms()) {
-                            if (lower.contains(term.toLowerCase(Locale.ROOT))) {
+                            if (lower.contains(term.toLowerCase(Locale.ROOT))
+                                    && !(isCode(rel) && onlyInsideStrings(lower, term.toLowerCase(Locale.ROOT)))) {
                                 hits.get(req).add(new Hit(req, repo, rel, i + 1, term, lines, weight));
                                 foundHere.add(req);
                                 break;
@@ -228,6 +229,56 @@ public class EvidenceFinder {
             }
         }
         return headingWithDescription;
+    }
+
+    private static final Set<String> CODE_EXTENSIONS = Set.of("java", "kt", "js", "jsx", "ts", "tsx", "py", "go",
+            "cs", "rb", "php");
+
+    static boolean isCode(String path) {
+        String ext = path.substring(path.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        return CODE_EXTENSIONS.contains(ext);
+    }
+
+    /**
+     * True when every occurrence of {@code term} on this code line is inside a quoted string or a comment, e.g. test
+     * data like {@code List.of("Kubernetes")} or {@code // no Kubernetes here}. Such text mentions a technology
+     * without using it. Import lines still count ({@code import x from "react"}, {@code require("express")}).
+     */
+    static boolean onlyInsideStrings(String line, String term) {
+        String trimmed = line.strip();
+        if (trimmed.startsWith("import ") || trimmed.startsWith("from ") || line.contains("require(")) {
+            return false;
+        }
+        if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*") || trimmed.startsWith("#")) {
+            return true; // a whole-line comment
+        }
+        boolean[] quoted = new boolean[line.length()];
+        char open = 0;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (open != 0) {
+                quoted[i] = true;
+                if (c == '\\') {
+                    i++;
+                    if (i < line.length()) {
+                        quoted[i] = true;
+                    }
+                } else if (c == open) {
+                    open = 0;
+                }
+            } else if (c == '"' || c == '\'' || c == '`') {
+                open = c;
+            } else if (c == '/' && i + 1 < line.length() && line.charAt(i + 1) == '/') {
+                java.util.Arrays.fill(quoted, i, line.length(), true); // the rest of the line is a comment
+                break;
+            }
+        }
+        for (int at = line.indexOf(term); at >= 0; at = line.indexOf(term, at + 1)) {
+            if (!quoted[at]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** 0 = ignore, 1 = docs, 2 = tests and CI workflows, 3 = source code, 4 = build file that proves the tech is used. */

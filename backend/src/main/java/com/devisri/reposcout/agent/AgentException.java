@@ -16,6 +16,9 @@ public class AgentException extends RuntimeException {
     /** Used in application.properties when GROQ_API_KEY is missing, so the app can still start. */
     public static final String KEY_PLACEHOLDER = "not-set";
 
+    static final String DAILY_LIMIT =
+            "The free AI tier's daily limit has been reached. Please try again later today or tomorrow.";
+
     private final boolean temporary;
 
     public AgentException(String message, boolean temporary, Throwable cause) {
@@ -37,6 +40,10 @@ public class AgentException extends RuntimeException {
             return already;
         }
         String msg = e.getMessage() == null ? "" : e.getMessage();
+        if (GroqErrorHandler.isDailyLimit(msg)) {
+            log.warn("AI daily limit reached: {}", msg);
+            return new AgentException(DAILY_LIMIT, true, e);
+        }
         if (e instanceof TransientAiException || e instanceof ResourceAccessException) {
             log.warn("AI call failed (temporary): {}", msg);
             return new AgentException("The AI service is busy or rate limited right now. Please try again in a minute.", true, e);

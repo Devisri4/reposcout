@@ -20,7 +20,7 @@ import org.springframework.web.client.ResponseErrorHandler;
  *   <li>{@code tool_use_failed}: the model called a tool with wrong argument names</li>
  *   <li>{@code output_parse_failed}: the model wrote text where a tool call was expected</li>
  * </ul>
- * Everything else (bad key, unknown model, ...) fails at once.
+ * Everything else (bad key, unknown model, the free tier's daily limit, ...) fails at once.
  */
 @Component
 public class GroqErrorHandler implements ResponseErrorHandler {
@@ -47,9 +47,17 @@ public class GroqErrorHandler implements ResponseErrorHandler {
     }
 
     static boolean isTemporary(int status, String body) {
+        if (isDailyLimit(body)) {
+            return false; // waiting seconds does not help; the daily quota refills over hours
+        }
         if (status == 429 || status >= 500) {
             return true;
         }
         return status == 400 && (body.contains("\"tool_use_failed\"") || body.contains("\"output_parse_failed\""));
+    }
+
+    /** Groq's free tier also limits tokens and requests per day, e.g. "tokens per day (TPD)". */
+    static boolean isDailyLimit(String body) {
+        return body.contains("per day (TPD)") || body.contains("per day (RPD)");
     }
 }

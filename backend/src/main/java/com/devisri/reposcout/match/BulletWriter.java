@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.devisri.reposcout.agent.AgentException;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 
 /** Step 3 of a job match: one AI call drafts resume bullets that may only point to evidence ids. */
@@ -31,11 +32,17 @@ public class BulletWriter {
             - Claim only what the evidence and project descriptions show. No numbers, users, performance or team
               claims unless shown.
             - Skip requirements whose evidence is weak; do not write a bullet without evidence.
+            - project: the repository the bullet is about, exactly as written in PROJECTS (e.g. "devi/shop"). Describe
+              the project only with that repository's own description, and use only evidence ids from that
+              repository. Never mix two projects in one bullet.
             - requirement: the name of the requirement the bullet proves, exactly as given.
             """;
 
+    /** Up to 8 bullets as JSON need more room than the 1024-token default used for agent steps. */
+    static final int MAX_TOKENS = 2048;
+
     /** One bullet as drafted by the AI, before checking. */
-    public record DraftBullet(String text, String requirement, List<String> evidenceIds) {
+    public record DraftBullet(String text, String project, String requirement, List<String> evidenceIds) {
     }
 
     public record Draft(List<DraftBullet> bullets) {
@@ -53,6 +60,7 @@ public class BulletWriter {
             Draft draft = chat.prompt()
                     .system(s -> s.text(SYSTEM_PROMPT).param("jobTitle", jobTitle))
                     .user(userMessage(descriptions, requirements, evidence))
+                    .options(OpenAiChatOptions.builder().maxTokens(MAX_TOKENS).build())
                     .call()
                     .entity(Draft.class);
             return draft == null || draft.bullets() == null ? new Draft(List.of()) : draft;

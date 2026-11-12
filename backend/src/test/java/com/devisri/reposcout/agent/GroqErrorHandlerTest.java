@@ -8,6 +8,7 @@ import org.springframework.ai.retry.TransientAiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GroqErrorHandlerTest {
@@ -43,5 +44,16 @@ class GroqErrorHandlerTest {
         assertThrows(HttpStatus.UNAUTHORIZED, "{\"error\":{\"code\":\"invalid_api_key\"}}", NonTransientAiException.class);
         assertThrows(HttpStatus.NOT_FOUND, "{\"error\":{\"code\":\"model_not_found\"}}", NonTransientAiException.class);
         assertThrows(HttpStatus.BAD_REQUEST, "{\"error\":{\"code\":\"context_length_exceeded\"}}", NonTransientAiException.class);
+    }
+
+    @Test
+    void dailyLimitFailsAtOnceWithAClearMessage() {
+        String body = "{\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-120b` on tokens per day (TPD):"
+                + " Limit 200000, Used 199504, Requested 2414.\",\"code\":\"rate_limit_exceeded\"}}";
+        assertThrows(HttpStatus.TOO_MANY_REQUESTS, body, NonTransientAiException.class);
+
+        AgentException e = AgentException.from(new NonTransientAiException("HTTP 429 - " + body), "otherwise");
+        assertThat(e.getMessage()).isEqualTo(AgentException.DAILY_LIMIT);
+        assertThat(e.isTemporary()).isTrue();
     }
 }

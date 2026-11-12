@@ -37,7 +37,7 @@ Every file link it shows is checked in plain Java first.
 | AI | Groq free tier, model `openai/gpt-oss-120b` |
 | Frontend | React 18, Vite 5 |
 | Database | PostgreSQL on Neon (H2 locally) |
-| Testing | JUnit 5, Mockito, MockMvc, Testcontainers, Vitest — 141 backend + 11 frontend tests |
+| Testing | JUnit 5, Mockito, MockMvc, Testcontainers, Vitest — 144 backend + 11 frontend tests |
 | CI/CD and hosting | GitHub Actions, Docker, Render (API), Vercel (page) |
 
 Security: zip-slip and zip-bomb protection, paths sandboxed to the repo folder, per-visitor rate limit,

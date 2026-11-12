@@ -65,7 +65,16 @@ public final class MatchVerifier {
                 dropped.add(new MatchResult.DroppedClaim(text, "more than " + MAX_BULLETS + " bullets"));
                 continue;
             }
-            List<Evidence> cited = ids.stream().map(byId::get).limit(3).toList();
+            // A bullet describes one project, so it may only cite code from that project's repository.
+            List<Evidence> all = ids.stream().map(byId::get).toList();
+            String repo = projectRepo(b.project(), evidence, all);
+            List<Evidence> cited = all.stream().filter(e -> e.repo().equalsIgnoreCase(repo)).limit(3).toList();
+            if (cited.isEmpty()) {
+                String others = all.stream().map(e -> shortName(e.repo())).distinct().collect(Collectors.joining(", "));
+                dropped.add(new MatchResult.DroppedClaim(text,
+                        "describes " + shortName(repo) + " but cites code from " + others));
+                continue;
+            }
             // The requirement must be one we asked about; otherwise use the requirement of its first evidence.
             Requirement req = b.requirement() == null ? null : reqByName.get(b.requirement().strip().toLowerCase(Locale.ROOT));
             String requirement = req != null ? req.name() : cited.get(0).requirement();
@@ -91,5 +100,23 @@ public final class MatchVerifier {
             }
         }
         return new Verified(statuses, kept, dropped, gaps);
+    }
+
+    /** The repository the bullet names, if it is one we searched; otherwise the repository of its first evidence. */
+    static String projectRepo(String project, List<Evidence> evidence, List<Evidence> cited) {
+        if (project != null && !project.isBlank()) {
+            String p = project.strip().toLowerCase(Locale.ROOT);
+            for (Evidence e : evidence) {
+                String repo = e.repo().toLowerCase(Locale.ROOT);
+                if (repo.equals(p) || repo.endsWith("/" + p)) {
+                    return e.repo();
+                }
+            }
+        }
+        return cited.get(0).repo();
+    }
+
+    static String shortName(String repo) {
+        return repo.substring(repo.lastIndexOf('/') + 1);
     }
 }

@@ -164,6 +164,25 @@ class EvidenceFinderTest {
                 .hasMessageContaining("no public repositories");
     }
 
+    @Test
+    void wordsInsideStringsOrCommentsDoNotCountAsCodeEvidence() {
+        // test data that only mentions a technology
+        assertThat(EvidenceFinder.onlyInsideStrings("list.of(\"kubernetes\"), true));", "kubernetes")).isTrue();
+        assertThat(EvidenceFinder.onlyInsideStrings("const msg = 'uses \\'docker\\' a lot';", "docker")).isTrue();
+        assertThat(EvidenceFinder.onlyInsideStrings("        // kubernetes has no evidence here", "kubernetes")).isTrue();
+        assertThat(EvidenceFinder.onlyInsideStrings("     * runs on kubernetes", "kubernetes")).isTrue();
+        assertThat(EvidenceFinder.onlyInsideStrings("x = 1; // see kubernetes docs", "kubernetes")).isTrue();
+        assertThat(EvidenceFinder.onlyInsideStrings("get(\"http://redis\"); redis.ping(); // ok", "redis")).isFalse();
+        // real use: outside quotes, or an import
+        assertThat(EvidenceFinder.onlyInsideStrings("kubernetesclient client = new kubernetesclient();", "kubernetes")).isFalse();
+        assertThat(EvidenceFinder.onlyInsideStrings("import { usestate } from \"react\";", "react")).isFalse();
+        assertThat(EvidenceFinder.onlyInsideStrings("const express = require('express');", "express")).isFalse();
+        assertThat(EvidenceFinder.onlyInsideStrings("log(\"redis\"); redis.get(key);", "redis")).isFalse();
+
+        assertThat(EvidenceFinder.isCode("src/test/java/a/MatchControllerTest.java")).isTrue();
+        assertThat(EvidenceFinder.isCode("package.json")).isFalse();
+    }
+
     private RepoProperties props() {
         return new RepoProperties(tmp, 51200, 1, 1, 1, 1, "", "http://unused", "http://unused");
     }
